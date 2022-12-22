@@ -1,94 +1,98 @@
-const {logEvents} = require('./logEvents')
-const EventEmitter = require('events')
-const http = require('http')
-const fs = require('fs')
-const fsPromises = require('fs').promises
+const express = require('express')
 const path = require('path')
-const { da } = require('date-fns/locale')
-
-class Emitter extends EventEmitter{}
-const myEmitter = new Emitter()
-myEmitter.on('log', (message, logFilePath) => logEvents(message, logFilePath))
-
-const serveFile = async (filePath, contentType, response) => {
-    try {
-        const rawData = await fsPromises.readFile(
-            filePath,
-            !contentType.includes('image') ? 'utf8': ''
-        )
-        const data = contentType === 'application/json' ? JSON.parse(rawData) : rawData
-        response.writeHead(
-            filePath.includes('404.html') ? 404 : 200, 
-            {'Content-Type': contentType}
-        )
-        response.end(
-            contentType === 'application/json' ? JSON.stringify(data) : data
-        )
-    } catch (error) {
-        myEmitter.emit('log', `${error.name}:\t${error.message}`, 'errorLog.txt')
-        response.statusCode = 500
-        response.end()
-    }
-}
+const cors = require('cors')
+const {logger} = require('./middleware/logEvents')
+const { errorHandler } = require('./middleware/errorHandler')
 
 const PORT = process.env.PORT || 3500
-const server = http.createServer((req, res) => {
-    myEmitter.emit('log', `${req.url}:\t${req.method}`, 'reqLog.txt')
-    const extension = path.extname(req.url)
-    let contentType
+const app = express()
 
-    switch (extension) {
-        case '.css':
-            contentType = 'text/css'
-            break
-        case '.js':
-            contentType = 'text/javascript'
-            break
-        case '.json':
-            contentType = 'application/json'
-            break
-        case '.jpg':
-            contentType = 'image/jpg'
-            break
-        case '.png':
-            contentType = 'image/png'
-            break
-        case '.txt':
-            contentType = 'text/plain'
-            break
-        default:
-            contentType = 'text/html'
-            break
-    }
+app.use(logger)
 
-    let filePath = 
-        (contentType === 'text/html' && req.url === "/")
-            ? path.join(__dirname, "views", "index.html")
-            : (contentType === 'text/html' && req.url.slice(-1) === "/")
-                ? path.join(__dirname, "views", req.url, "index.html")
-                : (contentType === 'text/html')
-                    ? path.join(__dirname, "views", req.url)
-                    : path.join(__dirname, req.url)
-
-    if (!extension && req.url.slice(-1) !== '/') filePath += '.html'
-
-    const fileExists = fs.existsSync(filePath)
-
-    if (fileExists) {
-        serveFile(filePath, contentType, res)
-    } else {
-        switch (path.parse(filePath).base) {
-            case 'old-page.html':
-                res.writeHead(301, {'Location': '/new-page.html'})
-                res.end()
-                break
-            default:
-                serveFile(path.join(__dirname,"views", "404.html"), "text/html", res)
-                break
+// Cross Origin Resource Sharing
+const whiteList = ['https://www.yoursite.com', 'http://127.0.0.1:5500', 'http://127.0.0.1:3500']
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (whiteList.includes(origin) || !origin) {
+            callback(null, true)
+        } else {
+            callback(new Error('Not allowed by CORS!'))
         }
+    },
+    optionsSuccessStatus: 200
+}
+app.use(cors(corsOptions))
+
+app.use(express.urlencoded({extended: false}))
+app.use(express.json())
+app.use(express.static(path.join(__dirname, 'public')))
+
+app.get('/', (req, res) => {
+    res.sendFile("index.html", {
+        root: path.join(__dirname, "views")
+    })
+})
+
+app.get('/index(.html)?', (req, res) => {
+    res.sendFile("index.html", {
+        root: path.join(__dirname, "views")
+    })
+})
+
+app.get('/new-page(.html)?', (req, res) => {
+    res.sendFile("new-page.html", {
+        root: path.join(__dirname, "views")
+    })
+})
+
+app.get('/old-page(.html)?', (req, res) => {
+    res.status(301).sendFile("new-page.html", {
+        root: path.join(__dirname, "views")
+    })
+})
+
+app.get('/hello(.html)?', (req, res, next) => {
+    console.log('Attempted to send hello.html')
+    next()
+}, (req, res) => {
+    res.send('Hello world!')
+})
+
+const firstChainFun = (req, res, next) => {
+    console.log('First chain function.')
+    next()
+}
+
+const secondChainFun = (req, res, next) => {
+    console.log('Second chain function.')
+    next()
+}
+
+const lastChainFun = (req, res) => {
+    console.log('Last chain function.')
+    res.send('Last chain!')
+}
+
+app.get('/chain', [firstChainFun, secondChainFun, lastChainFun])
+
+app.all('*', (req, res) => {
+    res.status(404)
+    
+    if (req.accepts('html')) {
+        res.sendFile("404.html", {
+            root: path.join(__dirname, "views")
+        })
+    } 
+    else if(req.accepts('json')){
+        res.send(app.json('404 Not Found'))
+    }
+    else {
+        res.type('txt').send('404 Not Found')
     }
 })
 
-server.listen(PORT, () => {
+app.use(errorHandler)
+
+app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
