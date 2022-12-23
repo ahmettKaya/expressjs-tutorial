@@ -25,55 +25,14 @@ app.use(cors(corsOptions))
 
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
-app.use(express.static(path.join(__dirname, 'public')))
 
-app.get('/', (req, res) => {
-    res.sendFile("index.html", {
-        root: path.join(__dirname, "views")
-    })
-})
+// Serve static files
+app.use('/', express.static(path.join(__dirname, 'public')))
+app.use('/subdir', express.static(path.join(__dirname, 'public')))
 
-app.get('/index(.html)?', (req, res) => {
-    res.sendFile("index.html", {
-        root: path.join(__dirname, "views")
-    })
-})
-
-app.get('/new-page(.html)?', (req, res) => {
-    res.sendFile("new-page.html", {
-        root: path.join(__dirname, "views")
-    })
-})
-
-app.get('/old-page(.html)?', (req, res) => {
-    res.status(301).sendFile("new-page.html", {
-        root: path.join(__dirname, "views")
-    })
-})
-
-app.get('/hello(.html)?', (req, res, next) => {
-    console.log('Attempted to send hello.html')
-    next()
-}, (req, res) => {
-    res.send('Hello world!')
-})
-
-const firstChainFun = (req, res, next) => {
-    console.log('First chain function.')
-    next()
-}
-
-const secondChainFun = (req, res, next) => {
-    console.log('Second chain function.')
-    next()
-}
-
-const lastChainFun = (req, res) => {
-    console.log('Last chain function.')
-    res.send('Last chain!')
-}
-
-app.get('/chain', [firstChainFun, secondChainFun, lastChainFun])
+// Routers
+app.use('/', require('./routes/root'))
+app.use('/subdir', require('./routes/subdir'))
 
 app.all('*', (req, res) => {
     res.status(404)
@@ -84,7 +43,7 @@ app.all('*', (req, res) => {
         })
     } 
     else if(req.accepts('json')){
-        res.send(app.json('404 Not Found'))
+        res.send(router.json('404 Not Found'))
     }
     else {
         res.type('txt').send('404 Not Found')
