@@ -23,7 +23,6 @@ const handleNewUser = async (req, res) => {
             path.join(__dirname, "..", "model", "users.json"), 
             JSON.stringify(usersDB.users)
         )
-        console.log(password)
         res.status(201).json({'success': `User ${name} is created.`})
     } catch (error) {
         return res.status(500).json({'message': error.message})
