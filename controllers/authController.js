@@ -2,7 +2,7 @@ const fsPromises = require('fs').promises
 const path = require('path')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-require('dotenv')
+require('dotenv').config()
 
 const usersDB = {
     users: require('../model/users.json'),
@@ -28,13 +28,13 @@ const handleLogin = async (req, res) => {
             {expiresIn: '1d'}
         )
         const otherUsers = usersDB.users.filter(user => user.name !== name)
-        const currenUser = [...foundUser, refreshToken]
+        const currenUser = {...foundUser, refreshToken}
         usersDB.setUsers([...otherUsers, currenUser])
         await fsPromises.writeFile(
             path.join(__dirname, "..", "model", "users.json"), 
             JSON.stringify(usersDB.users)
         )
-        res.cookie(refreshToken, {httpOnly: true, maxAge: 24*60*60*1000})
+        res.cookie('jwt', refreshToken, {httpOnly: true, maxAge: 24*60*60*1000})
         res.json({accesToken})
     } else {
         res.sendStatus(401)

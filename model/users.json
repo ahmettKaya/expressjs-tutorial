@@ -1,18 +1,1 @@
-[
-  {
-    "name": "Ahmet",
-    "password": "$2b$10$mDhC/sblfo6Zb2s3.DUche53pPsLpxPCZnXfUBH3vlvDPbWXvXgwC"
-  },
-  {
-    "name": "Şeyma",
-    "password": "$2b$10$P2wZIKHq1K5bpz9SkuKSIOsFdmz/LAY1ijXV/M/siOLlyBoL7Fu.6"
-  },
-  {
-    "name": "Beyazıt",
-    "password": "$2b$10$BxyFzLlyGqt1JYeYkbYCPO0jeNYPbyaFw4rrWPNLQFUgB4PpntTyy"
-  },
-  {
-    "name": "Mihrimah",
-    "password": "$2b$10$ZdEqWg1W/BAXyvZo/dB78urULjKRlLEDa9060GCbX/PVZ5.MKS0Zi"
-  }
-]
+[{"name":"Şeyma","password":"$2b$10$LIFFwGT/JklX3xjptLcXEe6kFnZmDbC3YDg0wtpOOhODnCisW0ZQO","refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoixZ5leW1hIiwiaWF0IjoxNjczMDQyMzEyLCJleHAiOjE2NzMxMjg3MTJ9.owW-EB-FYRWZJDETmPNibKnjv8nH4sWdoVklWe_xdsA"},{"name":"Ahmet","password":"$2b$10$CLpIaU1S7Tg3RnIJMbbQ3efWQ91KRails4q4erWPAly9XTAoEzJ6G","refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQWhtZXQiLCJpYXQiOjE2NzMwNDU2MDcsImV4cCI6MTY3MzEzMjAwN30.wOreflFwSzUqqQ90AF8pbDrXwmCnSkCs0bjXJ6Kte2c"}]
